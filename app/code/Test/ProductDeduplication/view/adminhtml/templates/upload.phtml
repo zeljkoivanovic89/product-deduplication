@@ -1,0 +1,155 @@
+<?php /** @var $block \Test\ProductDeduplication\Block\Adminhtml\Upload */ ?>
+
+<div class="admin__page-section">
+    <h1><?= __('Product Deduplication - Upload CSV') ?></h1>
+    <p><?= __('CSV format: sku_that_stays, sku_1, sku_2, ...') ?></p>
+
+    <form id="deduplication-upload-form" enctype="multipart/form-data">
+        <?= $block->getBlockHtml('formkey') ?>
+
+        <div class="admin__field">
+            <label class="admin__field-label" for="csv_file"><?= __('CSV File') ?></label>
+            <div class="admin__field-control">
+                <input type="file" name="csv_file" id="csv_file" accept=".csv" required />
+            </div>
+        </div>
+
+        <div class="admin__field">
+            <button type="button" id="run-dry-run" class="action-default scalable"><?= __('Analyse uploaded file') ?></button>
+        </div>
+
+        <!-- Run button -->
+        <div class="admin__field" style="margin-top:10px;">
+            <button type="button" id="run-real" class="action-primary scalable" style="display:none"><?= __('Run') ?></button>
+        </div>
+    </form>
+
+    <div id="progress-bar" style="display:none; width:100%; background:#f0f0f0; margin-top:10px;">
+        <div id="progress" style="width:0%; height:20px; background:#4caf50;"></div>
+    </div>
+
+    <div id="results" style="margin-top:20px;"></div>
+</div>
+
+<script type="text/javascript">
+require(['jquery'], function($){
+
+    let lastJobId = null;
+    let lastValidCount = 0;
+
+    function startProcessing(fileInput){
+        var formData = new FormData();
+        formData.append('csv_file', fileInput.files[0]);
+        formData.append('form_key', $('input[name="form_key"]').val());
+
+        $.ajax({
+            url: '<?= $block->getUrl("productdeduplication/index/processAjaxStart") ?>',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response){
+                if(response.success){
+                    lastJobId = response.jobId;
+                    pollStatus(response.jobId);
+                } else {
+                    $('#results').html('<p style="color:red;">'+response.message+'</p>');
+                }
+            }
+        });
+    }
+
+    function pollStatus(jobId){
+        var interval = setInterval(function(){
+            $.ajax({
+                url: '<?= $block->getUrl("productdeduplication/index/processAjaxStatus") ?>',
+                type: 'GET',
+                data: {jobId: jobId},
+                success: function(res){
+
+                    $('#progress-bar').show();
+                    $('#progress').css('width', res.percent + '%');
+
+                    var html = '<p>Processed: '+res.processed+'/'+res.total+'</p>';
+                    html += '<p>Valid rows: '+res.validCount+'</p>';
+                    html += '<p>Invalid rows: '+res.invalidCount+'</p>';
+
+                    if(res.invalidDetails && res.invalidDetails.length){
+                        html += '<ul>';
+                        res.invalidDetails.forEach(function(item){
+                            html += '<li>Row '+item.index+': '+item.reason+'</li>';
+                        });
+                        html += '</ul>';
+                    }
+
+                    $('#results').html(html);
+
+                    lastValidCount = res.validCount;
+
+                    if(res.processed >= res.total){
+                        clearInterval(interval);
+                        $('#progress').css('width','100%');
+
+                        if(lastValidCount > 0){
+                            $('#run-real')
+                                .show()
+                                .prop('disabled', false)
+                                .text('Run (Apply Changes – ' + lastValidCount + ' rows)');
+                        } else {
+                            $('#run-real')
+                                .show()
+                                .prop('disabled', true)
+                                .text('No valid rows to process');
+                        }
+                    }
+                },
+                error: function(){
+                    clearInterval(interval);
+                    $('#results').html('<p style="color:red;">Error during processing.</p>');
+                }
+            });
+        }, 1000);
+    }
+
+    $('#run-dry-run').on('click', function(){
+        var fileInput = $('#csv_file')[0];
+        if(fileInput.files.length === 0){
+            alert('Please select a CSV file.');
+            return;
+        }
+        $('#results').html('');
+        $('#progress').css('width','0%');
+        $('#run-real').hide();
+        startProcessing(fileInput);
+    });
+
+    // REAL RUN
+    $('#run-real').on('click', function(){
+        if(!lastJobId) return;
+
+        $(this).prop('disabled', true).text('Running...');
+
+        $.ajax({
+            url: '<?= $block->getUrl("productdeduplication/index/run") ?>',
+            type: 'POST',
+            data: {
+                jobId: lastJobId,
+                form_key: $('input[name="form_key"]').val()
+            },
+            success: function(response){
+                $('#run-real').text('Done ✓').prop('disabled', true);
+                if(response.success){
+                    $('#results').html('<p style="color:green;">' + response.message + '</p>');
+                } else {
+                    $('#results').html('<p style="color:red;">' + response.message + '</p>');
+                }
+            },
+            error: function(){
+                $('#run-real').text('Run (Apply Changes)').prop('disabled', false);
+                $('#results').html('<p style="color:red;">Error while applying changes.</p>');
+            }
+        });
+    });
+
+});
+</script>

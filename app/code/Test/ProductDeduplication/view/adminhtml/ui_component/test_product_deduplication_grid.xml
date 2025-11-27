@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">
+                test_product_deduplication_grid.test_product_deduplication_grid_data_source
+            </item>
+            <item name="deps" xsi:type="string">
+                test_product_deduplication_grid.test_product_deduplication_grid_data_source
+            </item>
+        </item>
+        <item name="spinner" xsi:type="string">test_product_deduplication_columns</item>
+    </argument>
+
+    <dataSource name="test_product_deduplication_grid_data_source">
+        <argument name="dataProvider" xsi:type="configurableObject">
+            <argument name="class" xsi:type="string">Test\ProductDeduplication\Ui\DataProvider\DataProvider</argument>
+            <argument name="name" xsi:type="string">test_product_deduplication_grid_data_source</argument>
+            <argument name="primaryFieldName" xsi:type="string">id</argument>
+            <argument name="requestFieldName" xsi:type="string">id</argument>
+
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/provider</item>
+                    <item name="update_url" path="mui/index/render" xsi:type="url"/>
+                    <item name="storageConfig" xsi:type="array">
+                        <item name="indexField" xsi:type="string">id</item>
+                    </item>
+                </item>
+            </argument>
+        </argument>
+    </dataSource>
+
+
+    <columns name="test_product_deduplication_columns">
+        <column name="id">
+            <settings>
+                <label translate="true">ID</label>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="admin_user_id">
+            <settings>
+                <label translate="true">Admin User ID</label>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="file_path">
+            <settings>
+                <label translate="true">Uploaded File</label>
+            </settings>
+        </column>
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date">
+            <settings>
+                <label translate="true">Created At</label>
+                <sortable>true</sortable>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
+            </settings>
+        </column>
+        <column name="valid_count">
+            <settings>
+                <label translate="true">Valid Rows</label>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="invalid_count">
+            <settings>
+                <label translate="true">Invalid Rows</label>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="invalid_details" class="Magento\Ui\Component\Listing\Columns\Column">
+            <settings>
+                <label translate="true">Invalid Reason(s)</label>
+                <sortable>false</sortable>
+                <filter>false</filter>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
+            </settings>
+        </column>
+
+        <actionsColumn name="actions" class="Test\ProductDeduplication\Ui\Component\Listing\Column\Actions">
+            <settings>
+                <label translate="true">Actions</label>
+            </settings>
+        </actionsColumn>
+
+    </columns>
+
+    <listingToolbar name="listing_top">
+        <paging name="listing_paging"/>
+    </listingToolbar>
+</listing>

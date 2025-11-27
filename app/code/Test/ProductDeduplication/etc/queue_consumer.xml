@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/consumer.xsd">
+
+    <consumer name="product_deduplication.run"
+              queue="product_deduplication_run_queue"
+              connection="db"
+              consumerInstance="Magento\Framework\MessageQueue\Consumer"
+              handler="Test\ProductDeduplication\Model\Consumer\RunConsumer::process"
+              maxMessages="100"/>
+
+</config>

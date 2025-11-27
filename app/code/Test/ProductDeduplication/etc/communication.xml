@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+
+    <topic name="product_deduplication.run" request="string">
+        <handler name="product_deduplication.run" type="Test\ProductDeduplication\Model\Consumer\RunConsumer" method="process"/>
+    </topic>
+
+</config>
